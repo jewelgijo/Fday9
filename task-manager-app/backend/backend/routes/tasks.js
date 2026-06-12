@@ -9,8 +9,18 @@ router.get("/", async (req, res) => {
 
 // CREATE
 router.post("/", async (req, res) => {
-  const task = await Task.create(req.body);
-  res.json(task);
+  try {
+    console.log("BODY:", req.body);
+
+    const task = await Task.create(req.body);
+
+    res.status(201).json(task);
+  } catch (err) {
+    console.log("CREATE ERROR:", err);
+    res.status(500).json({
+      message: err.message
+    });
+  }
 });
 
 // UPDATE (EDIT)
@@ -38,6 +48,18 @@ router.put("/:id", async (req, res) => {
     console.log("PUT ERROR:", err);
     res.status(500).json({ message: "Update failed" });
   }
+});
+
+// PATCH (toggle status / partial update)
+// TOGGLE STATUS (PATCH)
+router.patch("/:id", async (req, res) => {
+  const updatedTask = await Task.findByIdAndUpdate(
+    req.params.id,
+    { $set: req.body },
+    { new: true }
+  );
+
+  res.json(updatedTask);
 });
 
 // DELETE

@@ -10,9 +10,16 @@ function EditTaskModal({ task, onClose, onUpdate }) {
     dueDate: ""
   });
 
+  // ✅ SAFE MAPPING (IMPORTANT FIX)
   useEffect(() => {
     if (task) {
-      setForm(task);
+      setForm({
+        title: task.title || "",
+        description: task.description || "",
+        priority: task.priority || "low",
+        status: task.status || "pending",
+        dueDate: task.dueDate ? task.dueDate.split("T")[0] : ""
+      });
     }
   }, [task]);
 
@@ -23,10 +30,16 @@ function EditTaskModal({ task, onClose, onUpdate }) {
   };
 
   const handleSubmit = async () => {
-    const res = await api.put(`/tasks/${task._id}`, form);
+    try {
+      const res = await api.put(`/tasks/${task._id}`, form);
 
-    onUpdate(res.data); // update UI instantly
-    onClose();
+      console.log("UPDATED:", res.data);
+
+      onUpdate(res.data); // update UI instantly
+      onClose();
+    } catch (err) {
+      console.log("UPDATE ERROR:", err.response?.data || err.message);
+    }
   };
 
   return (
@@ -37,7 +50,8 @@ function EditTaskModal({ task, onClose, onUpdate }) {
         left: 100,
         background: "#fff",
         padding: 20,
-        border: "1px solid #ccc"
+        border: "1px solid #ccc",
+        zIndex: 999
       }}
     >
       <h3>Edit Task</h3>

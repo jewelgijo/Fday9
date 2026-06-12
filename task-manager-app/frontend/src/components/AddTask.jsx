@@ -16,28 +16,32 @@ function AddTask({ onTaskAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await api.post("/tasks", form);
+    try {
+      const res = await api.post("/tasks", {
+        ...form,
+        status: "pending"
+      });
 
-    onTaskAdded(res.data);
+      onTaskAdded(res.data);
 
-    setForm({
-      title: "",
-      description: "",
-      priority: "low",
-      dueDate: ""
-    });
+      setForm({
+        title: "",
+        description: "",
+        priority: "low",
+        dueDate: ""
+      });
+    } catch (err) {
+      console.log("ADD ERROR:", err.response?.data || err.message);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-      <h3>Add Task</h3>
-
+    <form onSubmit={handleSubmit}>
       <input
         name="title"
         placeholder="Title"
         value={form.title}
         onChange={handleChange}
-        required
       />
 
       <input
@@ -45,7 +49,6 @@ function AddTask({ onTaskAdded }) {
         placeholder="Description"
         value={form.description}
         onChange={handleChange}
-        required
       />
 
       <select name="priority" value={form.priority} onChange={handleChange}>
