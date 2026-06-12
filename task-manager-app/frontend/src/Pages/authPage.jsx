@@ -1,15 +1,11 @@
 import { useState, useContext } from "react";
-import API from "../api/axios";
+import api from "../api/axios";
 import { AuthContext } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
 
-export default function AuthPage() {
+function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: ""
-  });
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -23,7 +19,7 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        const res = await API.post("/auth/login", {
+        const res = await api.post("/auth/login", {
           email: form.email,
           password: form.password,
         });
@@ -31,61 +27,38 @@ export default function AuthPage() {
         login(res.data.token);
         navigate("/dashboard");
       } else {
-        await API.post("/auth/register", form);
-
-        alert("Registered successfully!");
+        await api.post("/auth/register", form);
+        alert("Registered successfully");
         setIsLogin(true);
       }
     } catch (err) {
-      console.log("ERROR:", err.response || err.message);
-
-      alert(
-        err.response?.data?.message ||
-        err.message ||
-        "Something went wrong"
-      );
+      console.log(err);
+      alert("Auth failed");
     }
   };
 
   return (
-    <div style={{ width: "300px", margin: "auto" }}>
+    <div>
       <h2>{isLogin ? "Login" : "Register"}</h2>
 
       <form onSubmit={handleSubmit}>
         {!isLogin && (
-          <input
-            name="name"
-            placeholder="Name"
-            onChange={handleChange}
-          />
+          <input name="name" placeholder="Name" onChange={handleChange} />
         )}
 
-        <input
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-        />
-
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          onChange={handleChange}
-        />
+        <input name="email" placeholder="Email" onChange={handleChange} />
+        <input name="password" type="password" onChange={handleChange} />
 
         <button type="submit">
           {isLogin ? "Login" : "Register"}
         </button>
       </form>
 
-      <p
-        onClick={() => setIsLogin(!isLogin)}
-        style={{ cursor: "pointer", color: "blue" }}
-      >
-        {isLogin
-          ? "Don't have an account? Register"
-          : "Already have an account? Login"}
+      <p onClick={() => setIsLogin(!isLogin)}>
+        {isLogin ? "Go to Register" : "Go to Login"}
       </p>
     </div>
   );
 }
+
+export default AuthPage;

@@ -6,52 +6,43 @@ import EditTaskModal from "../components/EditTaskModal";
 
 function Tasks() {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState(null);
 
-  // UI STATES (DAY 10)
+  // 🔍 SEARCH + FILTER STATE
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
 
   // GET TASKS
   const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/tasks");
-      setTasks(Array.isArray(res.data) ? res.data : res.data.tasks || []);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
+    const res = await api.get("/tasks");
+    setTasks(res.data);
   };
 
   useEffect(() => {
     fetchTasks();
   }, []);
 
-  // ADD
-  const handleTaskAdded = (task) => {
+  // CREATE
+  const addTask = (task) => {
     setTasks((prev) => [task, ...prev]);
   };
 
   // DELETE
-  const handleDelete = async (id) => {
+  const deleteTask = async (id) => {
     await api.delete(`/tasks/${id}`);
     setTasks((prev) => prev.filter((t) => t._id !== id));
   };
 
   // UPDATE
-  const handleUpdate = (updatedTask) => {
+  const updateTask = (updated) => {
     setTasks((prev) =>
-      prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
+      prev.map((t) => (t._id === updated._id ? updated : t))
     );
     setEditingTask(null);
   };
 
-  // TOGGLE STATUS (MARK COMPLETE / PENDING)
+  // TOGGLE STATUS
   const toggleStatus = async (task) => {
-  try {
     const res = await api.patch(`/tasks/${task._id}`, {
       status: task.status === "completed" ? "pending" : "completed",
     });
@@ -59,12 +50,9 @@ function Tasks() {
     setTasks((prev) =>
       prev.map((t) => (t._id === task._id ? res.data : t))
     );
-  } catch (err) {
-    console.log("PATCH ERROR:", err);
-  }
-};
+  };
 
-  // 🔍 SEARCH + FILTER LOGIC
+  // 🔥 SEARCH + FILTER LOGIC
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       const matchSearch = task.title
@@ -89,25 +77,23 @@ function Tasks() {
     high: tasks.filter((t) => t.priority === "high").length,
   };
 
-  if (loading) return <h2>Loading...</h2>;
-
   return (
     <div style={{ padding: 20 }}>
       <h2>Tasks</h2>
 
       {/* ADD TASK */}
-      <AddTask onTaskAdded={handleTaskAdded} />
+      <AddTask onTaskAdded={addTask} />
 
-      {/* SEARCH */}
+      {/* 🔍 SEARCH BAR */}
       <input
         placeholder="Search tasks..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ padding: 8, marginTop: 10 }}
+        style={{ padding: 8, margin: "10px 0" }}
       />
 
       {/* FILTER BUTTONS */}
-      <div style={{ marginTop: 10 }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
         <button onClick={() => setFilter("all")}>
           All ({counts.all})
         </button>
@@ -134,7 +120,7 @@ function Tasks() {
             key={task._id}
             task={task}
             onEdit={setEditingTask}
-            onDelete={handleDelete}
+            onDelete={deleteTask}
             onToggleStatus={toggleStatus}
           />
         ))
@@ -144,7 +130,7 @@ function Tasks() {
       <EditTaskModal
         task={editingTask}
         onClose={() => setEditingTask(null)}
-        onUpdate={handleUpdate}
+        onUpdate={updateTask}
       />
     </div>
   );

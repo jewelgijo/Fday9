@@ -3,28 +3,27 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// GET CURRENT USER FROM TOKEN
-router.get("/me", async (req, res) => {
+// UPDATE CURRENT USER NAME
+router.put("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token found" });
+      return res.status(401).json({ message: "No token" });
     }
 
     const token = authHeader.split(" ")[1];
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("-password");
+    const updatedUser = await User.findByIdAndUpdate(
+      decoded.id,
+      { name: req.body.name },
+      { new: true }
+    ).select("-password");
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(user);
+    res.json(updatedUser);
   } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
+    res.status(500).json({ message: err.message });
   }
 });
 
