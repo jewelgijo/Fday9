@@ -16,8 +16,18 @@ router.post("/", auth, async (req, res) => {
 
 // GET ALL TASKS (for logged-in user)
 router.get("/", auth, async (req, res) => {
-  const tasks = await Task.find({ userId: req.user.id });
-  res.json(tasks);
+  try {
+    console.log("GET TASKS USER:", req.user);
+
+    const tasks = await Task.find({ userId: req.user.id });
+
+    console.log("TASKS:", tasks);
+
+    res.json(tasks);
+  } catch (err) {
+    console.log("TASK ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
 });
 
 // UPDATE TASK

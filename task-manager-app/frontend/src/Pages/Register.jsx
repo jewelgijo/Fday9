@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../api/axios";
+import axios from "axios";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -8,29 +8,27 @@ export default function Register() {
     password: "",
   });
 
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await api.post("/auth/register", form);
-
-    alert("Registered successfully");
+    try {
+      await axios.post("http://localhost:5000/api/auth/register", form);
+      alert("Registered successfully");
+    } catch (err) {
+      alert(err.response?.data?.message);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <input placeholder="Name"
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
-      />
-
-      <input placeholder="Email"
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-      />
-
-      <input type="password" placeholder="Password"
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-      />
-
-      <button>Register</button>
+      <input name="name" placeholder="Name" onChange={handleChange} />
+      <input name="email" placeholder="Email" onChange={handleChange} />
+      <input name="password" type="password" onChange={handleChange} />
+      <button type="submit">Register</button>
     </form>
   );
 }
