@@ -11,7 +11,15 @@ function Dashboard() {
     const fetchTasks = async () => {
       try {
         const res = await axios.get("/tasks");
-        setTasks(res.data);
+
+        // 🔥 FIX: handle both array and object responses safely
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data.tasks || [];
+
+        console.log("API RESPONSE:", data);
+
+        setTasks(data);
       } catch (err) {
         console.log(err);
         setError("Failed to load tasks");
@@ -24,9 +32,12 @@ function Dashboard() {
   }, []);
 
   const total = tasks.length;
-  const completed = tasks.filter(
-    (task) => task.status === "Completed"
-  ).length;
+
+  // 🔥 FIX: safer completed logic (handles missing field)
+ const completed = tasks.filter(
+  (task) => task.status === "completed"
+).length;
+
   const pending = total - completed;
 
   if (loading) return <h2>Loading...</h2>;

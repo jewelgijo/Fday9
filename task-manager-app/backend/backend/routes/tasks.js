@@ -1,48 +1,56 @@
 const router = require("express").Router();
+const jwt = require("jsonwebtoken");
 const Task = require("../models/Task");
-const auth = require("../middleware/authMiddleware");
 
+// 🔐 AUTH MIDDLEWARE
+const auth = (req, res, next) => {
+  try {
+    const header = req.headers.authorization;
+
+    if (!header) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const token = header.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded; // { id: user._id, iat, exp }
+
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+// ======================
 // CREATE TASK
+// ======================
 router.post("/", auth, async (req, res) => {
   const task = new Task({
     title: req.body.title,
     description: req.body.description,
-    userId: req.user.id,
+    status: req.body.status,
+    priority: req.body.priority,
+
+    userId: req.user.id // 🔥 THIS IS REQUIRED
   });
 
   await task.save();
   res.json(task);
 });
 
-// GET ALL TASKS (for logged-in user)
+// ======================
+// GET ALL TASKS (USER BASED)
+// ======================
 router.get("/", auth, async (req, res) => {
-  try {
-    console.log("GET TASKS USER:", req.user);
+  console.log("USER FROM TOKEN:", req.user);
 
-    const tasks = await Task.find({ userId: req.user.id });
+  const tasks = await Task.find({}); // temporary
 
-    console.log("TASKS:", tasks);
+  console.log("TASKS FOUND:", tasks);
 
-    res.json(tasks);
-  } catch (err) {
-    console.log("TASK ERROR:", err);
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// UPDATE TASK
-router.put("/:id", auth, async (req, res) => {
-  const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-
-  res.json(task);
-});
-
-// DELETE TASK
-router.delete("/:id", auth, async (req, res) => {
-  await Task.findByIdAndDelete(req.params.id);
-  res.json({ message: "Task deleted" });
+  res.json(tasks);
 });
 
 module.exports = router;
