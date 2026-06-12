@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import AuthPage from "./pages/authPage";
 import Dashboard from "./pages/Dashboard";
+import Tasks from "./pages/Tasks";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -16,6 +17,16 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ✅ ADD THIS */}
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute>
+            <Tasks />
           </ProtectedRoute>
         }
       />

@@ -1,67 +1,38 @@
 import { useEffect, useState } from "react";
 import axios from "../api/axios";
-import TaskCard from "../components/TaskCard";
+import { Link } from "react-router-dom";
 
 function Dashboard() {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTasks = async () => {
-      try {
-        const res = await axios.get("/tasks");
-
-        // 🔥 FIX: handle both array and object responses safely
-        const data = Array.isArray(res.data)
-          ? res.data
-          : res.data.tasks || [];
-
-        console.log("API RESPONSE:", data);
-
-        setTasks(data);
-      } catch (err) {
-        console.log(err);
-        setError("Failed to load tasks");
-      } finally {
-        setLoading(false);
-      }
+      const res = await axios.get("/tasks");
+      setTasks(res.data);
     };
 
     fetchTasks();
   }, []);
 
   const total = tasks.length;
-
-  // 🔥 FIX: safer completed logic (handles missing field)
- const completed = tasks.filter(
-  (task) => task.status === "completed"
-).length;
-
+  const completed = tasks.filter(t => t.status === "completed").length;
   const pending = total - completed;
-
-  if (loading) return <h2>Loading...</h2>;
-  if (error) return <h2>{error}</h2>;
 
   return (
     <div>
       <h2>Dashboard</h2>
 
-      <div>
-        <h3>Total Tasks: {total}</h3>
-        <h3>Completed: {completed}</h3>
-        <h3>Pending: {pending}</h3>
-      </div>
+      {/* NAVIGATION BUTTON */}
+      <Link to="/tasks">
+        <button>Go to Tasks Page</button>
+      </Link>
 
       <hr />
 
-      {tasks.length === 0 ? (
-        <h3>No tasks yet</h3>
-      ) : (
-        tasks.map((task) => (
-          <TaskCard key={task._id} task={task} />
-        ))
-      )}
+      {/* SUMMARY */}
+      <h3>Total: {total}</h3>
+      <h3>Completed: {completed}</h3>
+      <h3>Pending: {pending}</h3>
     </div>
   );
 }

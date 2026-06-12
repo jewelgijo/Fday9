@@ -1,56 +1,53 @@
 const router = require("express").Router();
-const jwt = require("jsonwebtoken");
 const Task = require("../models/Task");
 
-// 🔐 AUTH MIDDLEWARE
-const auth = (req, res, next) => {
-  try {
-    const header = req.headers.authorization;
+// GET ALL
+router.get("/", async (req, res) => {
+  const tasks = await Task.find();
+  res.json(tasks);
+});
 
-    if (!header) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-
-    const token = header.split(" ")[1];
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = decoded; // { id: user._id, iat, exp }
-
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid token" });
-  }
-};
-
-// ======================
-// CREATE TASK
-// ======================
-router.post("/", auth, async (req, res) => {
-  const task = new Task({
-    title: req.body.title,
-    description: req.body.description,
-    status: req.body.status,
-    priority: req.body.priority,
-
-    userId: req.user.id // 🔥 THIS IS REQUIRED
-  });
-
-  await task.save();
+// CREATE
+router.post("/", async (req, res) => {
+  const task = await Task.create(req.body);
   res.json(task);
 });
 
-// ======================
-// GET ALL TASKS (USER BASED)
-// ======================
-router.get("/", auth, async (req, res) => {
-  console.log("USER FROM TOKEN:", req.user);
+// UPDATE (EDIT)
+router.put("/:id", async (req, res) => {
+  try {
+    console.log("TASK ID:", req.params.id);
+    console.log("REQUEST BODY:", req.body);
 
-  const tasks = await Task.find({}); // temporary
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
-  console.log("TASKS FOUND:", tasks);
+    console.log("UPDATED TASK FROM DB:", updatedTask);
 
-  res.json(tasks);
+    if (!updatedTask) {
+      return res.status(404).json({
+        message: "Task not found (ID does not exist in DB)"
+      });
+    }
+
+    res.json(updatedTask);
+  } catch (err) {
+    console.log("PUT ERROR:", err);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
+// DELETE
+router.delete("/:id", async (req, res) => {
+  try {
+    await Task.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 module.exports = router;

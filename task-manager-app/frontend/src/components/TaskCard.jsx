@@ -1,34 +1,25 @@
-function TaskCard({ task }) {
+function TaskCard({ task, onEdit, onDelete }) {
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "10px",
-        marginBottom: "10px",
-      }}
-    >
+    <div style={{ border: "1px solid red", padding: 10 }}>
       <h3>{task.title}</h3>
 
-      <p>
-        <strong>Status:</strong> {task.status}
-      </p>
+      <button
+        onClick={() => {
+          console.log("EDIT CLICK WORKS");
+          onEdit(task);
+        }}
+      >
+        Edit
+      </button>
 
-      <p>
-        <strong>Priority:</strong> {task.priority}
-      </p>
-
-      {task.description && (
-        <p>
-          <strong>Description:</strong> {task.description}
-        </p>
-      )}
-
-      {task.dueDate && (
-        <p>
-          <strong>Due:</strong>{" "}
-          {new Date(task.dueDate).toLocaleDateString()}
-        </p>
-      )}
+      <button
+        onClick={() => {
+          console.log("DELETE CLICK WORKS");
+          onDelete(task._id);
+        }}
+      >
+        Delete
+      </button>
     </div>
   );
 }

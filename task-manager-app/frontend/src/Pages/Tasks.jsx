@@ -1,50 +1,71 @@
 import { useEffect, useState } from "react";
-import axios from "../api/axios";
+import api from "../api/axios";
 import TaskCard from "../components/TaskCard";
+import AddTask from "../components/AddTask";
+import EditTaskModal from "../components/EditTaskModal";
 
 function Tasks() {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [editingTask, setEditingTask] = useState(null);
+
+  // GET TASKS
+  const fetchTasks = async () => {
+    const res = await api.get("/tasks");
+    setTasks(res.data);
+  };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const res = await axios.get("/tasks");
-
-        // 🔥 FIX: normalize response (array OR object)
-        const data = Array.isArray(res.data)
-          ? res.data
-          : res.data.tasks || [];
-
-        console.log("TASKS API RESPONSE:", data);
-
-        setTasks(data);
-      } catch (err) {
-        console.log(err);
-        setError("Failed to load tasks");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTasks();
   }, []);
 
-  if (loading) return <h2>Loading...</h2>;
-  if (error) return <h2>{error}</h2>;
+  // ADD
+  const handleTaskAdded = (task) => {
+    setTasks((prev) => [task, ...prev]);
+  };
 
-  if (tasks.length === 0) {
-    return <h2>No tasks yet</h2>;
-  }
+  // DELETE
+  const handleDelete = async (id) => {
+    const confirm = window.confirm("Delete task?");
+    if (!confirm) return;
+
+    await api.delete(`/tasks/${id}`);
+
+    setTasks((prev) => prev.filter((t) => t._id !== id));
+  };
+
+  // UPDATE
+  const handleUpdate = (updatedTask) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t._id === updatedTask._id ? updatedTask : t
+      )
+    );
+  };
 
   return (
     <div>
       <h2>Tasks</h2>
 
-      {tasks.map((task) => (
-        <TaskCard key={task._id} task={task} />
-      ))}
+      <AddTask onTaskAdded={handleTaskAdded} />
+
+      {tasks.length === 0 ? (
+        <h3>No tasks yet</h3>
+      ) : (
+        tasks.map((task) => (
+          <TaskCard
+            key={task._id}
+            task={task}
+            onEdit={setEditingTask}
+            onDelete={handleDelete}
+          />
+        ))
+      )}
+
+      <EditTaskModal
+        task={editingTask}
+        onClose={() => setEditingTask(null)}
+        onUpdate={handleUpdate}
+      />
     </div>
   );
 }
