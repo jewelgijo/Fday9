@@ -2,20 +2,32 @@ import { useState, useContext } from "react";
 import api from "../api/axios";
 import { AuthContext } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setLoading(true);
 
     try {
       if (isLogin) {
@@ -24,38 +36,125 @@ function AuthPage() {
           password: form.password,
         });
 
+        localStorage.setItem(
+          "user",
+          JSON.stringify(res.data.user)
+        );
+
         login(res.data.token);
+
+        toast.success("Login successful");
+
         navigate("/dashboard");
       } else {
         await api.post("/auth/register", form);
-        alert("Registered successfully");
+
+        toast.success("Registered successfully");
+
         setIsLogin(true);
+
+        setForm({
+          name: "",
+          email: "",
+          password: "",
+        });
       }
     } catch (err) {
-      console.log(err);
-      alert("Auth failed");
+      console.log(
+        "ERROR:",
+        err.response?.data || err.message
+      );
+
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Auth failed"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
+    <div
+      style={{
+        width: "350px",
+        margin: "50px auto",
+        padding: "20px",
+        border: "1px solid #ddd",
+        borderRadius: "10px",
+      }}
+    >
       <h2>{isLogin ? "Login" : "Register"}</h2>
 
       <form onSubmit={handleSubmit}>
         {!isLogin && (
-          <input name="name" placeholder="Name" onChange={handleChange} />
+          <input
+            name="name"
+            placeholder="Name"
+            value={form.name}
+            onChange={handleChange}
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+            }}
+          />
         )}
 
-        <input name="email" placeholder="Email" onChange={handleChange} />
-        <input name="password" type="password" onChange={handleChange} />
+        <input
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "10px",
+          }}
+        />
 
-        <button type="submit">
-          {isLogin ? "Login" : "Register"}
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "10px",
+          }}
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: "10px",
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+        >
+          {loading
+            ? "Please wait..."
+            : isLogin
+            ? "Login"
+            : "Register"}
         </button>
       </form>
 
-      <p onClick={() => setIsLogin(!isLogin)}>
-        {isLogin ? "Go to Register" : "Go to Login"}
+      <p
+        onClick={() => setIsLogin(!isLogin)}
+        style={{
+          cursor: "pointer",
+          color: "blue",
+          marginTop: "15px",
+        }}
+      >
+        {isLogin
+          ? "Don't have an account? Register"
+          : "Already have an account? Login"}
       </p>
     </div>
   );

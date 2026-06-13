@@ -3,7 +3,7 @@ import api from "../api/axios";
 import TaskCard from "../components/TaskCard";
 import AddTask from "../components/AddTask";
 import EditTaskModal from "../components/EditTaskModal";
-
+import toast from "react-hot-toast";
 function Tasks() {
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
@@ -29,28 +29,49 @@ function Tasks() {
 
   // DELETE
   const deleteTask = async (id) => {
+  try {
     await api.delete(`/tasks/${id}`);
+
     setTasks((prev) => prev.filter((t) => t._id !== id));
-  };
+
+    toast.success("Task deleted");
+  } catch (err) {
+    toast.error("Failed to delete task");
+  }
+};
 
   // UPDATE
   const updateTask = (updated) => {
-    setTasks((prev) =>
-      prev.map((t) => (t._id === updated._id ? updated : t))
-    );
-    setEditingTask(null);
-  };
+  setTasks((prev) =>
+    prev.map((t) => (t._id === updated._id ? updated : t))
+  );
+
+  setEditingTask(null);
+
+  toast.success("Task updated");
+};
 
   // TOGGLE STATUS
   const toggleStatus = async (task) => {
+  try {
     const res = await api.patch(`/tasks/${task._id}`, {
-      status: task.status === "completed" ? "pending" : "completed",
+      status:
+        task.status === "completed"
+          ? "pending"
+          : "completed",
     });
 
     setTasks((prev) =>
-      prev.map((t) => (t._id === task._id ? res.data : t))
+      prev.map((t) =>
+        t._id === task._id ? res.data : t
+      )
     );
-  };
+
+    toast.success("Status updated");
+  } catch (err) {
+    toast.error("Failed to update status");
+  }
+};
 
   // 🔥 SEARCH + FILTER LOGIC
   const filteredTasks = useMemo(() => {
@@ -78,7 +99,13 @@ function Tasks() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div
+  style={{
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "20px",
+  }}
+>
       <h2>Tasks</h2>
 
       {/* ADD TASK */}
@@ -86,14 +113,27 @@ function Tasks() {
 
       {/* 🔍 SEARCH BAR */}
       <input
-        placeholder="Search tasks..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ padding: 8, margin: "10px 0" }}
-      />
+  placeholder="Search tasks..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "10px",
+    margin: "15px 0",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+  }}
+/>
 
       {/* FILTER BUTTONS */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+      <div
+  style={{
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginBottom: "20px",
+  }}
+>
         <button onClick={() => setFilter("all")}>
           All ({counts.all})
         </button>
@@ -113,18 +153,27 @@ function Tasks() {
 
       {/* TASK LIST */}
       {filteredTasks.length === 0 ? (
-        <h3>No tasks found</h3>
-      ) : (
-        filteredTasks.map((task) => (
-          <TaskCard
-            key={task._id}
-            task={task}
-            onEdit={setEditingTask}
-            onDelete={deleteTask}
-            onToggleStatus={toggleStatus}
-          />
-        ))
-      )}
+  <h3>No tasks found</h3>
+) : (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+      gap: "15px",
+      marginTop: "20px",
+    }}
+  >
+    {filteredTasks.map((task) => (
+      <TaskCard
+        key={task._id}
+        task={task}
+        onEdit={setEditingTask}
+        onDelete={deleteTask}
+        onToggleStatus={toggleStatus}
+      />
+    ))}
+  </div>
+)}
 
       {/* EDIT MODAL */}
       <EditTaskModal

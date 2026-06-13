@@ -1,37 +1,54 @@
 import { useState } from "react";
 import api from "../api/axios";
+import toast from "react-hot-toast";
 
 function AddTask({ onTaskAdded }) {
+  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
     priority: "low",
-    dueDate: ""
+    dueDate: "",
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setLoading(true);
+
     try {
       const res = await api.post("/tasks", {
         ...form,
-        status: "pending"
+        status: "pending",
       });
 
       onTaskAdded(res.data);
+
+      toast.success("Task added successfully");
 
       setForm({
         title: "",
         description: "",
         priority: "low",
-        dueDate: ""
+        dueDate: "",
       });
     } catch (err) {
-      console.log("ADD ERROR:", err.response?.data || err.message);
+      console.log(
+        "ADD ERROR:",
+        err.response?.data || err.message
+      );
+
+      toast.error("Failed to add task");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,7 +68,11 @@ function AddTask({ onTaskAdded }) {
         onChange={handleChange}
       />
 
-      <select name="priority" value={form.priority} onChange={handleChange}>
+      <select
+        name="priority"
+        value={form.priority}
+        onChange={handleChange}
+      >
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
@@ -64,7 +85,9 @@ function AddTask({ onTaskAdded }) {
         onChange={handleChange}
       />
 
-      <button type="submit">Add Task</button>
+      <button type="submit" disabled={loading}>
+        {loading ? "Adding..." : "Add Task"}
+      </button>
     </form>
   );
 }
