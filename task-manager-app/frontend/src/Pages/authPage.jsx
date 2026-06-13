@@ -25,56 +25,66 @@ function AuthPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    setLoading(true);
+  // ✅ FRONTEND VALIDATION (CRITICAL)
+  if (!form.email || !form.password) {
+    toast.error("Email and password are required");
+    return;
+  }
 
-    try {
-      if (isLogin) {
-        const res = await api.post("/auth/login", {
-          email: form.email,
-          password: form.password,
-        });
+  if (!isLogin && !form.name) {
+    toast.error("Name is required");
+    return;
+  }
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify(res.data.user)
-        );
+  setLoading(true);
 
-        login(res.data.token);
+  try {
+    if (isLogin) {
+      const res = await api.post("/auth/login", {
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
 
-        toast.success("Login successful");
-
-        navigate("/dashboard");
-      } else {
-        await api.post("/auth/register", form);
-
-        toast.success("Registered successfully");
-
-        setIsLogin(true);
-
-        setForm({
-          name: "",
-          email: "",
-          password: "",
-        });
+      if (!res.data?.token) {
+        toast.error("Invalid login response");
+        return;
       }
-    } catch (err) {
-      console.log(
-        "ERROR:",
-        err.response?.data || err.message
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(res.data.user)
       );
 
-      toast.error(
-        err.response?.data?.message ||
-          err.message ||
-          "Auth failed"
-      );
-    } finally {
-      setLoading(false);
+      login(res.data.token);
+
+      toast.success("Login successful");
+
+      navigate("/dashboard");
+    } else {
+      await api.post("/auth/register", {
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
+
+      toast.success("Registered successfully");
+
+      setIsLogin(true);
+      setForm({ name: "", email: "", password: "" });
     }
-  };
+  } catch (err) {
+    console.log("ERROR:", err.response?.data || err.message);
 
+    toast.error(
+      err.response?.data?.message ||
+      "Auth failed"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div
       style={{
