@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import toast from "react-hot-toast";
 
 function EditTaskModal({ task, onClose, onUpdate }) {
   const [form, setForm] = useState({
@@ -7,10 +8,9 @@ function EditTaskModal({ task, onClose, onUpdate }) {
     description: "",
     priority: "low",
     status: "pending",
-    dueDate: ""
+    dueDate: "",
   });
 
-  // ✅ SAFE MAPPING (IMPORTANT FIX)
   useEffect(() => {
     if (task) {
       setForm({
@@ -18,7 +18,9 @@ function EditTaskModal({ task, onClose, onUpdate }) {
         description: task.description || "",
         priority: task.priority || "low",
         status: task.status || "pending",
-        dueDate: task.dueDate ? task.dueDate.split("T")[0] : ""
+        dueDate: task.dueDate
+          ? task.dueDate.split("T")[0]
+          : "",
       });
     }
   }, [task]);
@@ -26,19 +28,37 @@ function EditTaskModal({ task, onClose, onUpdate }) {
   if (!task) return null;
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async () => {
+    if (!form.title.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+
     try {
-      const res = await api.put(`/tasks/${task._id}`, form);
+      const res = await api.put(
+        `/tasks/${task._id}`,
+        {
+          ...form,
+          title: form.title.trim(),
+        }
+      );
 
-      console.log("UPDATED:", res.data);
+      onUpdate(res.data);
 
-      onUpdate(res.data); // update UI instantly
+      toast.success("Task updated successfully");
+
       onClose();
     } catch (err) {
-      console.log("UPDATE ERROR:", err.response?.data || err.message);
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to update task"
+      );
     }
   };
 
@@ -51,7 +71,7 @@ function EditTaskModal({ task, onClose, onUpdate }) {
         background: "#fff",
         padding: 20,
         border: "1px solid #ccc",
-        zIndex: 999
+        zIndex: 999,
       }}
     >
       <h3>Edit Task</h3>
@@ -68,13 +88,21 @@ function EditTaskModal({ task, onClose, onUpdate }) {
         onChange={handleChange}
       />
 
-      <select name="priority" value={form.priority} onChange={handleChange}>
+      <select
+        name="priority"
+        value={form.priority}
+        onChange={handleChange}
+      >
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
       </select>
 
-      <select name="status" value={form.status} onChange={handleChange}>
+      <select
+        name="status"
+        value={form.status}
+        onChange={handleChange}
+      >
         <option value="pending">Pending</option>
         <option value="completed">Completed</option>
       </select>
@@ -86,10 +114,16 @@ function EditTaskModal({ task, onClose, onUpdate }) {
         onChange={handleChange}
       />
 
-      <br /><br />
+      <br />
+      <br />
 
-      <button onClick={handleSubmit}>Save</button>
-      <button onClick={onClose}>Cancel</button>
+      <button onClick={handleSubmit}>
+        Save
+      </button>
+
+      <button onClick={onClose}>
+        Cancel
+      </button>
     </div>
   );
 }

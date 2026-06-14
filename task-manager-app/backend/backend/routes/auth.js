@@ -5,51 +5,63 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 
-
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+    email = email.trim().toLowerCase();
 
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({
-        message: "User already exists"
+        message: "User already exists",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
-      name,
+    await User.create({
+      name: name.trim(),
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     res.status(201).json({
-      message: "User registered successfully"
+      message: "User registered successfully",
     });
-
   } catch (err) {
-    console.log("REGISTER ERROR:", err);
     res.status(500).json({
-      message: err.message
+      message: "Server error",
     });
   }
 });
 
-
 // LOGIN
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+
+    email = email.trim().toLowerCase();
 
     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({
-        message: "User not found"
+        message: "User not found",
       });
     }
 
@@ -60,7 +72,7 @@ router.post("/login", async (req, res) => {
 
     if (!isMatch) {
       return res.status(400).json({
-        message: "Invalid credentials"
+        message: "Invalid credentials",
       });
     }
 
@@ -72,26 +84,26 @@ router.post("/login", async (req, res) => {
 
     res.json({
       token,
-      user
+      user,
     });
-
   } catch (err) {
-    console.log("LOGIN ERROR:", err);
     res.status(500).json({
-      message: err.message
+      message: "Server error",
     });
   }
 });
-
 
 // GET CURRENT USER
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (
+      !authHeader ||
+      !authHeader.startsWith("Bearer ")
+    ) {
       return res.status(401).json({
-        message: "No token found"
+        message: "No token found",
       });
     }
 
@@ -107,16 +119,14 @@ router.get("/me", async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     res.json(user);
-
   } catch (err) {
-    console.log("ME ERROR:", err);
     res.status(401).json({
-      message: "Invalid token"
+      message: "Invalid token",
     });
   }
 });

@@ -25,147 +25,169 @@ function AuthPage() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // ✅ FRONTEND VALIDATION (CRITICAL)
-  if (!form.email || !form.password) {
-    toast.error("Email and password are required");
-    return;
-  }
-
-  if (!isLogin && !form.name) {
-    toast.error("Name is required");
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    if (isLogin) {
-      const res = await api.post("/auth/login", {
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-      });
-
-      if (!res.data?.token) {
-        toast.error("Invalid login response");
-        return;
-      }
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(res.data.user)
-      );
-
-      login(res.data.token);
-
-      toast.success("Login successful");
-
-      navigate("/dashboard");
-    } else {
-      await api.post("/auth/register", {
-        name: form.name.trim(),
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-      });
-
-      toast.success("Registered successfully");
-
-      setIsLogin(true);
-      setForm({ name: "", email: "", password: "" });
+    if (!form.email || !form.password) {
+      toast.error("Email and password are required");
+      return;
     }
-  } catch (err) {
-    console.log("ERROR:", err.response?.data || err.message);
 
-    toast.error(
-      err.response?.data?.message ||
-      "Auth failed"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+    if (!isLogin && !form.name) {
+      toast.error("Name is required");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const res = await api.post("/auth/login", {
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+        });
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(res.data.user)
+        );
+
+        login(res.data.token);
+
+        toast.success("Login successful");
+
+        navigate("/dashboard");
+      } else {
+        await api.post("/auth/register", {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+        });
+
+        toast.success("Registered successfully");
+
+        setIsLogin(true);
+
+        setForm({
+          name: "",
+          email: "",
+          password: "",
+        });
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+        "Authentication failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
-        width: "350px",
-        margin: "50px auto",
-        padding: "20px",
-        border: "1px solid #ddd",
-        borderRadius: "10px",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background:
+          "linear-gradient(135deg,#2563eb,#1e3a8a)",
       }}
     >
-      <h2>{isLogin ? "Login" : "Register"}</h2>
-
-      <form onSubmit={handleSubmit}>
-        {!isLogin && (
-          <input
-            name="name"
-            placeholder="Name"
-            value={form.name}
-            onChange={handleChange}
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "10px",
-            }}
-          />
-        )}
-
-        <input
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        />
-
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
-        >
-          {loading
-            ? "Please wait..."
-            : isLogin
-            ? "Login"
-            : "Register"}
-        </button>
-      </form>
-
-      <p
-        onClick={() => setIsLogin(!isLogin)}
+      <div
         style={{
-          cursor: "pointer",
-          color: "blue",
-          marginTop: "15px",
+          width: "400px",
+          background: "white",
+          padding: "35px",
+          borderRadius: "15px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
         }}
       >
-        {isLogin
-          ? "Don't have an account? Register"
-          : "Already have an account? Login"}
-      </p>
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: "10px",
+          }}
+        >
+          Task Manager
+        </h1>
+
+        <p
+          style={{
+            textAlign: "center",
+            color: "#666",
+            marginBottom: "25px",
+          }}
+        >
+          {isLogin
+            ? "Sign in to continue"
+            : "Create a new account"}
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <input
+              name="name"
+              placeholder="Full Name"
+              value={form.name}
+              onChange={handleChange}
+            />
+          )}
+
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+          />
+
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "12px",
+              marginTop: "10px",
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: "bold",
+            }}
+          >
+            {loading
+              ? "Please wait..."
+              : isLogin
+              ? "Login"
+              : "Register"}
+          </button>
+        </form>
+
+        <p
+          style={{
+            textAlign: "center",
+            marginTop: "20px",
+            cursor: "pointer",
+            color: "#2563eb",
+            fontWeight: "bold",
+          }}
+          onClick={() => setIsLogin(!isLogin)}
+        >
+          {isLogin
+            ? "Create New Account"
+            : "Already have an account? Login"}
+        </p>
+      </div>
     </div>
   );
 }

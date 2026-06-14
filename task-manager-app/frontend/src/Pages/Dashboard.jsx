@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaTasks, FaUser, FaCheckCircle, FaClock } from "react-icons/fa";
+import {
+  FaTasks,
+  FaUser,
+  FaCheckCircle,
+  FaClock,
+} from "react-icons/fa";
 import api from "../api/axios";
+import toast from "react-hot-toast";
 
 function Dashboard() {
   const [tasks, setTasks] = useState([]);
@@ -12,7 +18,7 @@ function Dashboard() {
         const res = await api.get("/tasks");
         setTasks(res.data);
       } catch (err) {
-        console.log(err);
+        toast.error("Failed to load tasks");
       }
     };
 
@@ -20,6 +26,7 @@ function Dashboard() {
   }, []);
 
   const total = tasks.length;
+
   const completed = tasks.filter(
     (t) => t.status === "completed"
   ).length;
@@ -145,6 +152,7 @@ function Dashboard() {
                 color: "white",
                 border: "none",
                 borderRadius: "6px",
+                cursor: "pointer",
               }}
             >
               Open Tasks
@@ -174,6 +182,7 @@ function Dashboard() {
                 color: "white",
                 border: "none",
                 borderRadius: "6px",
+                cursor: "pointer",
               }}
             >
               Open Profile

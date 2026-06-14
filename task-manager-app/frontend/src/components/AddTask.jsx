@@ -22,11 +22,17 @@ function AddTask({ onTaskAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!form.title.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await api.post("/tasks", {
         ...form,
+        title: form.title.trim(),
         status: "pending",
       });
 
@@ -41,12 +47,10 @@ function AddTask({ onTaskAdded }) {
         dueDate: "",
       });
     } catch (err) {
-      console.log(
-        "ADD ERROR:",
-        err.response?.data || err.message
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to add task"
       );
-
-      toast.error("Failed to add task");
     } finally {
       setLoading(false);
     }

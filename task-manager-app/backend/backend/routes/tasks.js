@@ -1,74 +1,108 @@
 const router = require("express").Router();
 const Task = require("../models/Task");
 
-// GET ALL
+// GET ALL TASKS
 router.get("/", async (req, res) => {
-  const tasks = await Task.find();
-  res.json(tasks);
-});
-
-// CREATE
-router.post("/", async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-
-    const task = await Task.create(req.body);
-
-    res.status(201).json(task);
+    const tasks = await Task.find();
+    res.json(tasks);
   } catch (err) {
-    console.log("CREATE ERROR:", err);
     res.status(500).json({
-      message: err.message
+      message: "Failed to fetch tasks",
     });
   }
 });
 
-// UPDATE (EDIT)
+// CREATE TASK
+router.post("/", async (req, res) => {
+  try {
+    const { title } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        message: "Task title is required",
+      });
+    }
+
+    const task = await Task.create({
+      ...req.body,
+      title: title.trim(),
+    });
+
+    res.status(201).json(task);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to create task",
+    });
+  }
+});
+
+// UPDATE TASK
 router.put("/:id", async (req, res) => {
   try {
-    console.log("TASK ID:", req.params.id);
-    console.log("REQUEST BODY:", req.body);
-
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
-
-    console.log("UPDATED TASK FROM DB:", updatedTask);
 
     if (!updatedTask) {
       return res.status(404).json({
-        message: "Task not found (ID does not exist in DB)"
+        message: "Task not found",
       });
     }
 
     res.json(updatedTask);
   } catch (err) {
-    console.log("PUT ERROR:", err);
-    res.status(500).json({ message: "Update failed" });
+    res.status(500).json({
+      message: "Update failed",
+    });
   }
 });
 
-// PATCH (toggle status / partial update)
-// TOGGLE STATUS (PATCH)
+// PATCH TASK
 router.patch("/:id", async (req, res) => {
-  const updatedTask = await Task.findByIdAndUpdate(
-    req.params.id,
-    { $set: req.body },
-    { new: true }
-  );
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
 
-  res.json(updatedTask);
+    if (!updatedTask) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    res.json(updatedTask);
+  } catch (err) {
+    res.status(500).json({
+      message: "Update failed",
+    });
+  }
 });
 
-// DELETE
+// DELETE TASK
 router.delete("/:id", async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted successfully" });
+    const deletedTask = await Task.findByIdAndDelete(
+      req.params.id
+    );
+
+    if (!deletedTask) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    res.json({
+      message: "Deleted successfully",
+    });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({
+      message: "Delete failed",
+    });
   }
 });
 
