@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://fday9.onrender.com",
+  baseURL: "https://fday9.onrender.com/api",
 });
 
 // ✅ REQUEST INTERCEPTOR
