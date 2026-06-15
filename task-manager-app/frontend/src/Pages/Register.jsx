@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -16,10 +16,10 @@ export default function Register() {
     e.preventDefault();
 
     try {
-      await axios.post("http://localhost:5000/api/auth/register", form);
+      await api.post("/auth/register", form);
       alert("Registered successfully");
     } catch (err) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Registration failed");
     }
   };
 
